@@ -12,14 +12,14 @@ from scipy import stats
 
 
 #import lists with info
-from chathelper import DocsStolen
-from chathelper import DocsReturned
-from chathelper import DocsTransmitted
-from chathelper import DocsAll
-from chathelper import DynamitePlanted
-from chathelper import DynamiteDefused
-from chathelper import DynamiteExploded
-from chathelper import DynamiteAll
+from .chathelper import DocsStolen
+from .chathelper import DocsReturned
+from .chathelper import DocsTransmitted
+from .chathelper import DocsAll
+from .chathelper import DynamitePlanted
+from .chathelper import DynamiteDefused
+from .chathelper import DynamiteExploded
+from .chathelper import DynamiteAll
 
 ##########################
 # FUNCTIONS TO PARSE DEMOS
@@ -63,7 +63,7 @@ def make_dictionary(demos_path):
 
 		#debug if no demos in folder
 		if(len(demos)) == 0:
-			print folder
+			print(folder)
 			pass
 
 		elif(len(demos)) == 1:
@@ -104,8 +104,8 @@ def make_dictionary(demos_path):
 		counter += 1
 
 		if counter % 100 == 0:
-			print 'parsed ' + str(counter) + ' matches'
-	print 'finished parsing all matches!'
+			print('parsed ' + str(counter) + ' matches')
+	print('finished parsing all matches!')
 	
 	return demos_dct
 	
@@ -157,13 +157,13 @@ def fill_db(root_path, parameters_dct, demos_dct, demo_folder_name = 'demos', ex
 			#insert demo into database
 			parameters = indexer_exe_cmd(demo_path, parameters_dct)
 			if verbose:
-				print demo
+				print(demo)
 			os.system(exe_path + ' ' + parameters)
 		if counter % 50 == 0:
-			print 'filled ' + str(counter) + ' matches in the database'
+			print('filled ' + str(counter) + ' matches in the database')
 		counter += 1
 		
-	print 'all matches filled in database!'
+	print('all matches filled in database!')
 
 ############################
 # FUNCTIONS TO ANALYZE DEMOS
@@ -403,9 +403,9 @@ def get_kill_sprees(obituary_df, demo_df, maxtime_secs = 30, include_weapon_filt
 
 		if counter % 100 == 0:
 			if verbose:
-				print 'scanned ' + str(counter) + ' demos of ' + str(total_demos) + ' demos in total'
+				print('scanned ' + str(counter) + ' demos of ' + str(total_demos) + ' demos in total')
 
-	print 'all done!'
+	print('all done!')
 
 
 	#make final dataframe where 1 row is a spree with all the necessary info
@@ -515,7 +515,7 @@ def cut_demos(root_path, demos_dct, df_spree, demo_type = 'kill', offset_start =
 # MISCELLANEOUS
 ###############
 
-def generate_capture_list(df_spree, folder ='C:\Users\Jelle\Documents', demo_type = 'kill', name = 'capture_list.xml', transform_to_dm_60 = True, follow_mode = True):
+def generate_capture_list(df_spree, folder ='C:\\Users\\\Jelle\\\Documents', demo_type = 'kill', name = 'capture_list.xml', transform_to_dm_60 = True, follow_mode = True):
 	'''
 	Function that makes a xml capture list to be imported in crumbs his demoviewer. transform_to_dm_60 is used to either save older protocol demos to .dm_60 extension
 	'''
@@ -639,13 +639,13 @@ def recordings_to_avi(vdub_folder, screenshots_folder, output_folder, vdub_exe, 
 			f.writelines(lines)
 			
 		#make avi
-		print 'rendering ' + rec
+		print('rendering ' + rec)
 		os.system(cmdline)
 		
 		if remove_screenshots:
 			shutil.rmtree(os.path.join(screenshots_folder, rec))
 
-	print 'all done!'
+	print('all done!')
 
 
 
@@ -656,7 +656,8 @@ def hh_mm_ss2seconds(x):
 	if x in ('Warmup', 'Countdown', 'Intermission', ''):
 		s = -1
 	else:
-		s = reduce(lambda acc, x: acc*60 + x, map(int, x.split(':')))
+		import functools
+		s = functools.reduce(lambda acc, x: acc*60 + x, map(int, x.split(':')))
 
 	return s
 
@@ -800,9 +801,9 @@ def get_docruns(chatmessages_df, min_docrun_length = None, max_timeleft = None, 
 		#verbose shizzle
 		if counter % 100 == 0:
 			if verbose:
-				print 'scanned ' + str(counter) + ' demos of ' + str(total_demos) + ' demos in total' 
+				print('scanned ' + str(counter) + ' demos of ' + str(total_demos) + ' demos in total')
 	
-	print 'all done!'
+	print('all done!')
 	
 	
 	#make final dataframe where 1 row is a spree with all the necessary info
@@ -889,9 +890,9 @@ def get_wtvmoments(chatmessages_df, z = 5, window = 10, verbose=True):
 			#verbose shizzle
 		if counter % 100 == 0:
 			if verbose:
-				print 'scanned ' + str(counter) + ' demos of ' + str(total_demos) + ' demos in total' 
+				print('scanned ' + str(counter) + ' demos of ' + str(total_demos) + ' demos in total')
 
-	print 'all done!'
+	print('all done!')
 
 
 	#make final dataframe where 1 row is a spree with all the necessary info
@@ -1012,9 +1013,9 @@ def get_headshot_sprees(bulletevent_df, demo_df, maxtime_secs = 3, minspree = 3,
 
 		if counter % 100 == 0:
 			if verbose:
-				print 'scanned ' + str(counter) + ' demos of ' + str(total_demos) + ' demos in total'
+				print('scanned ' + str(counter) + ' demos of ' + str(total_demos) + ' demos in total')
 
-	print 'all done!'
+	print('all done!')
 
 
 	#make final dataframe where 1 row is a spree with all the necessary info

@@ -12,14 +12,14 @@ from scipy import stats
 
 
 #import lists with info
-from chathelper import DocsStolen
-from chathelper import DocsReturned
-from chathelper import DocsTransmitted
-from chathelper import DocsAll
-from chathelper import DynamitePlanted
-from chathelper import DynamiteDefused
-from chathelper import DynamiteExploded
-from chathelper import DynamiteAll
+from .chathelper import DocsStolen
+from .chathelper import DocsReturned
+from .chathelper import DocsTransmitted
+from .chathelper import DocsAll
+from .chathelper import DynamitePlanted
+from .chathelper import DynamiteDefused
+from .chathelper import DynamiteExploded
+from .chathelper import DynamiteAll
 
 ##########################
 # FUNCTIONS TO PARSE DEMOS
@@ -35,11 +35,11 @@ def md5(fname):
 		for chunk in iter(lambda: f.read(4096), b""):
 			hash_md5.update(chunk)
 	return hash_md5.hexdigest()
-	
+
 def make_dictionary(demos_path):
 	'''
 	function that makes a dictionary with:
-	- key: 1 match folder where the demos are located 
+	- key: 1 match folder where the demos are located
 	- value: list with md5 checksum + list with demo names
 	'''
 	counter = 0
@@ -63,7 +63,7 @@ def make_dictionary(demos_path):
 
 		#debug if no demos in folder
 		if(len(demos)) == 0:
-			print folder
+			print(folder)
 			pass
 
 		elif(len(demos)) == 1:
@@ -73,7 +73,7 @@ def make_dictionary(demos_path):
 
 		else:
 			#fill the lists with demo names and their last changed date
-			for demo in demos: 
+			for demo in demos:
 				#if file is a demo, process it
 				changed_date = os.path.getmtime(os.path.join(demos_path, folder, demo))
 				md5_name = md5(os.path.join(demos_path, folder, demo))
@@ -89,8 +89,9 @@ def make_dictionary(demos_path):
 							   'last_changed_date': last_changed_lst})
 			df = df.sort_values('last_changed_date')
 			#if length between first demo and last demo is less than 5 minutes, sort on demo name, else on last changed date
-			if int(np.subtract(df.iloc[[-1], 1], df.iloc[[0], 1])) < 5 * 60:
-				df = df.sort_values('demo_name')
+			#todo: (<class 'TypeError'>, TypeError("cannot convert the series to <class 'int'>",), <traceback object at 0x20F28300>)
+			#if int(np.subtract(df.iloc[[-1], 1], df.iloc[[0], 1])) < 5 * 60:
+			#	df = df.sort_values('demo_name')
 
 			#fill a list of lists of md5 name and demo name
 			md5_names_lst = df.md5_name.tolist()
@@ -104,20 +105,20 @@ def make_dictionary(demos_path):
 		counter += 1
 
 		if counter % 100 == 0:
-			print 'parsed ' + str(counter) + ' matches'
-	print 'finished parsing all matches!'
-	
+			print('parsed ' + str(counter) + ' matches')
+	print('finished parsing all matches!')
+
 	return demos_dct
-	
+
 
 def indexer_exe_cmd(demo_path, parameters_dct):
 	'''
 	helper function to create string with demo_path and parameters to input in anders libtech 3 api
-	parameters: 
+	parameters:
 	- demo_path: full path to demo
 	- parameters_dct: a dictionary with all the parameters necessary
 	'''
-	s = 'indexer indexTarget/' + demo_path 
+	s = 'indexer indexTarget/' + demo_path
 	s += '/exportBulletEvents/' + parameters_dct['exportBulletEvents']
 	s += '/exportPlayers/' + parameters_dct['exportPlayers']
 	s += '/exportDemo/' + parameters_dct['exportDemo']
@@ -125,10 +126,12 @@ def indexer_exe_cmd(demo_path, parameters_dct):
 	s += '/exportChatMessages/' + parameters_dct['exportChatMessages']
 	s += '/exportJson/' + parameters_dct['exportJson']
 	s += '/exportSQL/' + parameters_dct['exportSQL']
-	
+
 	if parameters_dct['exportSQL'] == '1':
 		s += '/exportSQLFile/' + parameters_dct['exportSQLFile']
-	
+
+
+
 	if parameters_dct['exportJson'] == '1':
 		s += '/eportJsonFile/' + parameters_dct['exportJsonFile']
 
@@ -137,10 +140,10 @@ def indexer_exe_cmd(demo_path, parameters_dct):
 def fill_db(root_path, parameters_dct, demos_dct, demo_folder_name = 'demos', exe_name = 'Anders.Gaming.LibTech3.exe', verbose = True):
 	'''
 	fill a sqlite database with statistics of all demos
-	
+
 	parameters:
 	- path: root directory (1 level higher than demos)
-	- parameters_dct: a dictionary with all the parameters settings to fill database: 
+	- parameters_dct: a dictionary with all the parameters settings to fill database:
 	- demos_dct: dictionary created with make_dictionary function
 	- demo_folder_name: foldername where the demos are located
 	- exe_name: anders libtech3 api filename
@@ -150,20 +153,21 @@ def fill_db(root_path, parameters_dct, demos_dct, demo_folder_name = 'demos', ex
 	exe_path = os.path.join(root_path, exe_name)
 	for k in demos_dct:
 		match_folder = os.path.join(root_path, demo_folder_name, k)
-		
+
 		for demo in demos_dct[k][1]:
 			demo_path = os.path.join(match_folder, demo)
-			
+
 			#insert demo into database
 			parameters = indexer_exe_cmd(demo_path, parameters_dct)
 			if verbose:
-				print demo
-			os.system(exe_path + ' ' + parameters)
+				print(demo)
+
 		if counter % 50 == 0:
-			print 'filled ' + str(counter) + ' matches in the database'
+			print('filled ' + str(counter) + ' matches in the database')
+
 		counter += 1
-		
-	print 'all matches filled in database!'
+
+	print('all matches filled in database!')
 
 ############################
 # FUNCTIONS TO ANALYZE DEMOS
@@ -171,7 +175,7 @@ def fill_db(root_path, parameters_dct, demos_dct, demo_folder_name = 'demos', ex
 
 def add_match_data(df, player_df, demos_dct, what_df = 'obituary_df'):
 	'''
-	Add match information to a db df to possibily filter on later. 
+	Add match information to a db df to possibily filter on later.
 	Important note: only works if you have my rtcw demo folder naming system.
 	'''
 	pd_md5 = []
@@ -240,7 +244,7 @@ def get_kill_sprees(obituary_df, demo_df, maxtime_secs = 30, include_weapon_filt
 	#import the weapons_enum
 	from weapons_enum import weapons_enum
 
-	#empty lists that we will populate and use to make final df_spree 
+	#empty lists that we will populate and use to make final df_spree
 	pd_md5 = []
 	pd_attacker = []
 	pd_start_dwtime = []
@@ -283,11 +287,11 @@ def get_kill_sprees(obituary_df, demo_df, maxtime_secs = 30, include_weapon_filt
 		match_name = df_demo.matchName.unique()
 		demo_pov = df_demo.bPOVId.unique()
 		counter += 1
-		
+
 		for player in df_demo.bAttacker.unique():
 			df_cut = df_demo.loc[obituary_df['bAttacker'] == player]
 			player_name = df_cut.szCleanName.unique()
-			df_cut = df_cut.sort_values('dwTime') 
+			df_cut = df_cut.sort_values('dwTime')
 			arr = df_cut.as_matrix(columns = ['bAttacker', 'bTarget', 'bIsTeamkill', 'dwTime', 'bWeapon'])
 
 			timerestriction = maxtime_secs * 1000 #put it in seconds for rtcw time
@@ -301,20 +305,20 @@ def get_kill_sprees(obituary_df, demo_df, maxtime_secs = 30, include_weapon_filt
 
 				#init first_spreetime
 				if row == 0:
-					first_spreetime = frag[3]         
+					first_spreetime = frag[3]
 
 				#debug if dzTime is buggy (lower current dzTime vs first spree dzTime): restart counting
 				if frag[3] - first_spreetime < 0:
 					if (frag[0] != frag[1]) and (frag[2] != 1):
 						spreecounter = 1
-						first_spreetime = frag[3]   
+						first_spreetime = frag[3]
 						temp_sprees = []
 						weapons_used = ''
 						temp_sprees.append(first_spreetime)
 						weapons_used += str(frag[4]) + '-'
 					else:
 						spreecounter = 0
-						first_spreetime = frag[3]   
+						first_spreetime = frag[3]
 						temp_sprees = []
 						weapons_used = ''
 
@@ -341,7 +345,7 @@ def get_kill_sprees(obituary_df, demo_df, maxtime_secs = 30, include_weapon_filt
 
 					if (frag[0] != frag[1]) and (frag[2] != 1):
 						spreecounter = 1
-						first_spreetime = frag[3]   
+						first_spreetime = frag[3]
 						temp_sprees = []
 						weapons_used = ''
 						temp_sprees.append(first_spreetime)
@@ -349,7 +353,7 @@ def get_kill_sprees(obituary_df, demo_df, maxtime_secs = 30, include_weapon_filt
 
 					else:
 						spreecounter = 0
-						first_spreetime = frag[3]   
+						first_spreetime = frag[3]
 						temp_sprees = []
 						weapons_used = ''
 
@@ -369,9 +373,9 @@ def get_kill_sprees(obituary_df, demo_df, maxtime_secs = 30, include_weapon_filt
 
 		if counter % 100 == 0:
 			if verbose:
-				print 'scanned ' + str(counter) + ' demos of ' + str(total_demos) + ' demos in total'
+				print('scanned ' + str(counter) + ' demos of ' + str(total_demos) + ' demos in total')
 
-	print 'all done!'
+	print('all done!')
 
 
 	#make final dataframe where 1 row is a spree with all the necessary info
@@ -412,7 +416,7 @@ def locate_demo_path(demos_dct, spree, root_path):
 			match_folder = k
 			demo_loc = [i for i in range(len(demos_dct[k][0])) if demos_dct[k][0][i]==spree.md5]
 			demo_name = demos_dct[k][1][demo_loc[0]]
-			
+
 			return match_folder, demo_name
 
 
@@ -424,8 +428,8 @@ def generate_output_name(spree, demo_type = 'kill', transform_to_dm_60 = True):
 	if demo_type == 'kill':
 		output_name = spree['demo'][:-6] + '_' + spree['player'] + '_' + spree['weapons'] + str(spree['start']) + spree['demo'][-6:]
 	if demo_type == 'docs':
-		output_name = spree['demo'][:-6] + '_' + str(spree['duration']) + '_' + str(spree['start_secsleft']) + '_' + str(spree['end_secsleft']) + '_' + str(spree['won_round']) + '_' + str(spree['start']) + spree['demo'][-6:] 
-	
+		output_name = spree['demo'][:-6] + '_' + str(spree['duration']) + '_' + str(spree['start_secsleft']) + '_' + str(spree['end_secsleft']) + '_' + str(spree['won_round']) + '_' + str(spree['start']) + spree['demo'][-6:]
+
 	if demo_type == 'wtv':
 		output_name = spree['demo'][:-6] + '_' + str(spree['start']) + '_' + spree['demo'][-6:]
 
@@ -435,12 +439,12 @@ def generate_output_name(spree, demo_type = 'kill', transform_to_dm_60 = True):
 	if transform_to_dm_60:
 		output_name = output_name[:-2] + '60'
 
-	#additional replacement 
+	#additional replacement
 	output_name = output_name.replace('^', '')
-	
+
 	return output_name
 
-def cutter_exe_cmd(root_path, match_folder, demo_name, spree, start_time, end_time, demo_type = 'kill', transform_to_dm_60 = True, 
+def cutter_exe_cmd(root_path, match_folder, demo_name, spree, start_time, end_time, demo_type = 'kill', transform_to_dm_60 = True,
 				   demo_folder_name = 'demos', output_folder = 'output_spree_demos', cut_type = 1):
 	'''
 	helper function to create string with demo_path and parameters to input in anders libtech 3 api
@@ -449,7 +453,7 @@ def cutter_exe_cmd(root_path, match_folder, demo_name, spree, start_time, end_ti
 	output_demo_name = generate_output_name(spree, demo_type, transform_to_dm_60)
 
 	output_path = os.path.join(root_path, output_folder, output_demo_name)
-	
+
 	s = 'cut ' + demo_path + ' '
 	s += output_path + ' '
 	s += str(start_time) + ' '
@@ -482,18 +486,18 @@ def cut_demos(root_path, demos_dct, df_spree, demo_type = 'kill', offset_start =
 # MISCELLANEOUS
 ###############
 
-def generate_capture_list(df_spree, folder ='C:\Users\Jelle\Documents', demo_type = 'kill', name = 'capture_list.xml', transform_to_dm_60 = True, follow_mode = True):
+def generate_capture_list(df_spree, folder ='C:\\Users\Jelle\\Documents', demo_type = 'kill', name = 'capture_list.xml', transform_to_dm_60 = True, follow_mode = True):
 	'''
 	Function that makes a xml capture list to be imported in crumbs his demoviewer. transform_to_dm_60 is used to either save older protocol demos to .dm_60 extension
 	'''
-	
+
 	df_spree['output_name'] = df_spree.apply(lambda x: generate_output_name(x, demo_type, transform_to_dm_60), axis=1).values
-	
+
 	captureList = etree.Element('CaptureList')
 
 	for row in range(len(df_spree)):
 		spree = df_spree.iloc[row]
-		if demo_type not in ('kill', 'hs'): 
+		if demo_type not in ('kill', 'hs'):
 			spree.attacker = '-1'
 
 		if not follow_mode:
@@ -528,13 +532,13 @@ def generate_capture_list(df_spree, folder ='C:\Users\Jelle\Documents', demo_typ
 		capture.append(config)
 
 		captureList.append(capture)
-		
+
 	tree = etree.ElementTree(captureList)
 	tree.write(os.path.join(folder,name), pretty_print=True, xml_declaration=True, encoding="utf-8")
 
 def merge_capture_lists(folder ='C:/Users/Jelle/Documents/GIT/rtcw_demo_analyzer/xml', name = 'capture_list_merged.xml'):
 	'''
-	Function that merges several capture lists in one big capture list. 
+	Function that merges several capture lists in one big capture list.
 	'''
 	captureList = etree.Element('CaptureList')
 	xml_files = glob.glob(folder +"/*.xml")
@@ -594,25 +598,25 @@ def recordings_to_avi(vdub_folder, screenshots_folder, output_folder, vdub_exe, 
 		vdubinputline = vdubinputline.replace('\\', '\\\\')
 		vduboutputline = vduboutputline.replace('\\', '\\\\')
 
-		
+
 		#replace lines in cfg file for input and output
 		with open(vdubconfig_path) as f:
 			lines = f.readlines()
-		
+
 		lines[0] = vdubinputline
 		lines[-2] = vduboutputline
 
 		with open(vdubconfig_path, "w") as f:
 			f.writelines(lines)
-			
+
 		#make avi
-		print 'rendering ' + rec
+		print('rendering ' + rec)
 		os.system(cmdline)
-		
+
 		if remove_screenshots:
 			shutil.rmtree(os.path.join(screenshots_folder, rec))
 
-	print 'all done!'
+	print('all done!')
 
 
 
@@ -639,7 +643,7 @@ def map_docrun_events(x):
 		d = -1
 
 	return d
-		
+
 def map_dynamite_events(x):
 
 	if x in DynamitePlanted:
@@ -681,7 +685,7 @@ def feature_extraction_chat(chatmessages_df):
 	return chatmessages_df
 
 def get_docruns(chatmessages_df, min_docrun_length = None, max_timeleft = None, docs_succesful = None, min_docs_lost = None, verbose = True):
-	
+
 	#empty lists that we will populate and use to make final df
 	pd_md5 = []
 	pd_start_docrun_dwtime = []
@@ -693,28 +697,28 @@ def get_docruns(chatmessages_df, min_docrun_length = None, max_timeleft = None, 
 	pd_won_round = []
 	pd_demo_name = []
 	pd_match_name = []
-	
+
 	#helper variables for verbose
 	counter = 0
 	total_demos = chatmessages_df.szMd5.nunique()
-	
+
 	for demo in chatmessages_df.szMd5.unique():
 		#evt hier nog cutten op timelimit hit of docsevents zoals cell hierboven voor speed
 		df_demo = chatmessages_df.loc[(chatmessages_df['szMd5'] == demo) & (chatmessages_df['InMatch'])]
 		demo_name = df_demo.demoName.unique()
 		match_name = df_demo.matchName.unique()
 		counter += 1
-		
+
 		arr = df_demo.as_matrix(columns = ['DocsEvents', 'TimelimitHit', 'dwTime', 'SecondsLeftInRound'])
 		taken_docs_bool = False
 		docs_lost_times = 0
-		
+
 		for row in range(len(arr)):
 			chat = arr[row, :]
-			
+
 			#taken docs
 			if chat[0] == 1:
-				if taken_docs_bool == False: 
+				if taken_docs_bool == False:
 					start_dwtime = chat[2]
 					start_timeleft = chat[3]
 					taken_docs_bool = True
@@ -727,7 +731,7 @@ def get_docruns(chatmessages_df, min_docrun_length = None, max_timeleft = None, 
 				end_timeleft = chat[3]
 				taken_docs_bool = False
 				docs_succes = True
-				
+
 				pd_md5.append(demo)
 				pd_start_docrun_dwtime.append(start_dwtime)
 				pd_end_docrun_dwtime.append(end_dwtime)
@@ -738,16 +742,16 @@ def get_docruns(chatmessages_df, min_docrun_length = None, max_timeleft = None, 
 				pd_won_round.append(docs_succes)
 				pd_demo_name.append(demo_name[0])
 				pd_match_name.append(match_name[0])
-			
+
 				docs_lost_times = 0
-				
+
 			#returned docs / timelimit hit
 			if ((chat[0] == 0 or chat[1] == 1) and (taken_docs_bool == True)):
 				end_dwtime = chat[2]
 				end_timeleft = chat[3]
 				taken_docs_bool = False
 				docs_succes = False
-				
+
 				pd_md5.append(demo)
 				pd_start_docrun_dwtime.append(start_dwtime)
 				pd_end_docrun_dwtime.append(end_dwtime)
@@ -758,20 +762,20 @@ def get_docruns(chatmessages_df, min_docrun_length = None, max_timeleft = None, 
 				pd_won_round.append(docs_succes)
 				pd_demo_name.append(demo_name[0])
 				pd_match_name.append(match_name[0])
-				
+
 				docs_lost_times = 0
-				
+
 			#if demo stopped before end of docrun
-			
-			
+
+
 		#verbose shizzle
 		if counter % 100 == 0:
 			if verbose:
-				print 'scanned ' + str(counter) + ' demos of ' + str(total_demos) + ' demos in total' 
-	
-	print 'all done!'
-	
-	
+				print('scanned ' + str(counter) + ' demos of ' + str(total_demos) + ' demos in total')
+
+	print('all done!')
+
+
 	#make final dataframe where 1 row is a spree with all the necessary info
 	df_docs = pd.DataFrame(
 	{'md5': pd_md5,
@@ -785,20 +789,20 @@ def get_docruns(chatmessages_df, min_docrun_length = None, max_timeleft = None, 
 	 'demo': pd_demo_name,
 	 'match': pd_match_name,
 	})
-	
+
 	if min_docrun_length != None:
 		df_docs = df_docs.loc[df_docs['duration'] >= min_docrun_length]
-		
+
 	if max_timeleft != None:
 		df_docs = df_docs.loc[df_docs['end_secsleft'] <= max_timeleft]
-		
+
 	if docs_succesful != None:
 		df_docs = df_docs.loc[df_docs['won_round'] == docs_succesful]
-		
+
 	if min_docs_lost != None:
 		df_docs = df_docs.loc[df_docs['times_lost_docs'] >= min_docs_lost]
-		
-	return df_docs     
+
+	return df_docs
 
 def get_wtvmoments(chatmessages_df, z = 5, window = 10, verbose=True):
 	pd_md5 = []
@@ -806,7 +810,7 @@ def get_wtvmoments(chatmessages_df, z = 5, window = 10, verbose=True):
 	pd_end_wtv = []
 	pd_demo_name = []
 	pd_match_name = []
-	
+
 	#helper variables for verbose
 	counter = 0
 	total_demos = chatmessages_df.szMd5.nunique()
@@ -845,20 +849,20 @@ def get_wtvmoments(chatmessages_df, z = 5, window = 10, verbose=True):
 				if i - prev > window:
 					lst.append(i)
 				prev = i
-				
-			for i in lst:     
+
+			for i in lst:
 				pd_md5.append(demo)
 				pd_start_wtv.append(i * 1000)
 				pd_end_wtv.append(i * 1000)
 				pd_demo_name.append(demo_name[0])
 				pd_match_name.append(match_name[0])
-				
+
 			#verbose shizzle
 		if counter % 100 == 0:
 			if verbose:
-				print 'scanned ' + str(counter) + ' demos of ' + str(total_demos) + ' demos in total' 
+				print('scanned ' + str(counter) + ' demos of ' + str(total_demos) + ' demos in total')
 
-	print 'all done!'
+	print('all done!')
 
 
 	#make final dataframe where 1 row is a spree with all the necessary info
@@ -868,15 +872,15 @@ def get_wtvmoments(chatmessages_df, z = 5, window = 10, verbose=True):
 	 'end': pd_end_wtv,
 	 'demo': pd_demo_name,
 	 'match': pd_match_name,
-	})     
-	
+	})
+
 	return df_wtv
 
 def get_headshot_sprees(bulletevent_df, demo_df, maxtime_secs = 3, minspree = 3, pov_sprees_only = False, verbose = True):
 	#import the weapons_enum
 	from weapons_enum import weapons_enum
 
-	#empty lists that we will populate and use to make final df_spree 
+	#empty lists that we will populate and use to make final df_spree
 	pd_md5 = []
 	pd_attacker = []
 	pd_start_dwtime = []
@@ -920,18 +924,18 @@ def get_headshot_sprees(bulletevent_df, demo_df, maxtime_secs = 3, minspree = 3,
 
 				#init first_spreetime
 				if row == 0:
-					first_spreetime = frag[3]      
+					first_spreetime = frag[3]
 
 				#debug if dzTime is buggy (lower current dzTime vs first spree dzTime): restart counting
 				if frag[3] - first_spreetime < 0:
 					if (frag[0] != frag[1]):
 						spreecounter = 1
-						first_spreetime = frag[3]   
+						first_spreetime = frag[3]
 						temp_sprees = []
 						temp_sprees.append(first_spreetime)
 					else:
 						spreecounter = 0
-						first_spreetime = frag[3]   
+						first_spreetime = frag[3]
 						temp_sprees = []
 
 				#if current headshot is in the timerestriction, up the spreecount and append temp_sprees
@@ -955,13 +959,13 @@ def get_headshot_sprees(bulletevent_df, demo_df, maxtime_secs = 3, minspree = 3,
 
 					if (frag[0] != frag[1]) and (frag[2] != 1):
 						spreecounter = 1
-						first_spreetime = frag[3]   
+						first_spreetime = frag[3]
 						temp_sprees = []
 						temp_sprees.append(first_spreetime)
 
 					else:
 						spreecounter = 0
-						first_spreetime = frag[3]   
+						first_spreetime = frag[3]
 						temp_sprees = []
 
 				#if last frag in the data, and we have reach the minspree, add entry
@@ -979,9 +983,9 @@ def get_headshot_sprees(bulletevent_df, demo_df, maxtime_secs = 3, minspree = 3,
 
 		if counter % 100 == 0:
 			if verbose:
-				print 'scanned ' + str(counter) + ' demos of ' + str(total_demos) + ' demos in total'
+				print('scanned ' + str(counter) + ' demos of ' + str(total_demos) + ' demos in total')
 
-	print 'all done!'
+	print('all done!')
 
 
 	#make final dataframe where 1 row is a spree with all the necessary info
