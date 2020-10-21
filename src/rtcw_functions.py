@@ -322,7 +322,7 @@ def get_kill_sprees(obituary_df, demo_df, maxtime_secs = 30, include_weapon_filt
 			df_cut = df_demo.loc[obituary_df['bAttacker'] == player]
 			player_name = df_cut.szCleanName.unique()
 			df_cut = df_cut.sort_values('dwTime')
-			arr = df_cut.as_matrix(columns = ['bAttacker', 'bTarget', 'bIsTeamkill', 'dwTime', 'bWeapon'])
+			arr = df_cut[['bAttacker', 'bTarget', 'bRegion', 'dwTime']].to_numpy()
 
 			timerestriction = maxtime_secs * 1000 #put it in seconds for rtcw time
 			spreecounter = 0
@@ -648,7 +648,6 @@ def recordings_to_avi(vdub_folder, screenshots_folder, output_folder, vdub_exe, 
 	print('all done!')
 
 
-
 def hh_mm_ss2seconds(x):
 	'''
 	Function that splits szTimeString to seconds left in round
@@ -738,8 +737,8 @@ def get_docruns(chatmessages_df, min_docrun_length = None, max_timeleft = None, 
 		demo_name = df_demo.demoName.unique()
 		match_name = df_demo.matchName.unique()
 		counter += 1
-		
-		arr = df_demo.as_matrix(columns = ['DocsEvents', 'TimelimitHit', 'dwTime', 'SecondsLeftInRound'])
+
+		arr = df_demo[['DocsEvents', 'TimelimitHit', 'dwTime', 'SecondsLeftInRound']].to_numpy()
 		taken_docs_bool = False
 		docs_lost_times = 0
 		
@@ -942,7 +941,7 @@ def get_headshot_sprees(bulletevent_df, demo_df, maxtime_secs = 3, minspree = 3,
 			df_cut = df_demo.loc[bulletevent_df['bAttacker'] == player]
 			player_name = df_cut.szCleanName.unique()
 			df_cut = df_cut.sort_values('dwTime')
-			arr = df_cut.as_matrix(columns = ['bAttacker', 'bTarget', 'bRegion', 'dwTime'])
+			arr = df_cut[['bAttacker', 'bTarget', 'bRegion', 'dwTime']].to_numpy()
 
 			timerestriction = maxtime_secs * 1000 #put it in seconds for rtcw time
 			spreecounter = 0

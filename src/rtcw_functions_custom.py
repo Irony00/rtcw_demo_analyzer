@@ -9,6 +9,7 @@ import shutil
 import glob
 import re
 from scipy import stats
+import functools
 
 
 #import lists with info
@@ -161,6 +162,7 @@ def fill_db(root_path, parameters_dct, demos_dct, demo_folder_name = 'demos', ex
 			parameters = indexer_exe_cmd(demo_path, parameters_dct)
 			if verbose:
 				print(demo)
+			os.system(exe_path + ' ' + parameters)
 
 		if counter % 50 == 0:
 			print('filled ' + str(counter) + ' matches in the database')
@@ -242,7 +244,7 @@ def get_kill_sprees(obituary_df, demo_df, maxtime_secs = 30, include_weapon_filt
 	'''
 
 	#import the weapons_enum
-	from weapons_enum import weapons_enum
+	from .weapons_enum import weapons_enum
 
 	#empty lists that we will populate and use to make final df_spree
 	pd_md5 = []
@@ -292,7 +294,8 @@ def get_kill_sprees(obituary_df, demo_df, maxtime_secs = 30, include_weapon_filt
 			df_cut = df_demo.loc[obituary_df['bAttacker'] == player]
 			player_name = df_cut.szCleanName.unique()
 			df_cut = df_cut.sort_values('dwTime')
-			arr = df_cut.as_matrix(columns = ['bAttacker', 'bTarget', 'bIsTeamkill', 'dwTime', 'bWeapon'])
+
+			arr = df_cut[['bAttacker', 'bTarget', 'bIsTeamkill', 'dwTime', 'bWeapon']].to_numpy()
 
 			timerestriction = maxtime_secs * 1000 #put it in seconds for rtcw time
 			spreecounter = 0
@@ -426,7 +429,7 @@ def generate_output_name(spree, demo_type = 'kill', transform_to_dm_60 = True):
 	'''
 	#output_name = spree['match'] + '_' +  spree['demo'][:-6] + '_' + spree['player'] + '_' + spree['weapons'] + str(spree['start']) + spree['demo'][-6:]
 	if demo_type == 'kill':
-		output_name = spree['demo'][:-6] + '_' + spree['player'] + '_' + spree['weapons'] + str(spree['start']) + spree['demo'][-6:]
+		output_name = spree['demo'][:-6] + '_' + spree['player'].decode() + '_' + spree['weapons'] + str(spree['start']) + spree['demo'][-6:]
 	if demo_type == 'docs':
 		output_name = spree['demo'][:-6] + '_' + str(spree['duration']) + '_' + str(spree['start_secsleft']) + '_' + str(spree['end_secsleft']) + '_' + str(spree['won_round']) + '_' + str(spree['start']) + spree['demo'][-6:]
 
@@ -434,7 +437,7 @@ def generate_output_name(spree, demo_type = 'kill', transform_to_dm_60 = True):
 		output_name = spree['demo'][:-6] + '_' + str(spree['start']) + '_' + spree['demo'][-6:]
 
 	if demo_type == 'hs':
-		output_name = spree['demo'][:-6] + '_' + spree['player'] + '_' + str(spree['start']) + spree['demo'][-6:]
+		output_name = spree['demo'][:-6] + '_' + spree['player'].decode() + '_' + str(spree['start']) + spree['demo'][-6:]
 
 	if transform_to_dm_60:
 		output_name = output_name[:-2] + '60'
@@ -460,14 +463,14 @@ def cutter_exe_cmd(root_path, match_folder, demo_name, spree, start_time, end_ti
 	s += str(end_time) + ' '
 	s += str(cut_type) + ' 0' # plus the zero at the end or the api will crash
 
-	return s
+	return s, output_path
 
 def cut_demos(root_path, demos_dct, df_spree, demo_type = 'kill', offset_start = 5, offset_end = 5, transform_to_dm_60 = True,
 	demo_folder_name = 'demos', output_folder = 'output_spree_demos', exe_name = 'Anders.Gaming.LibTech3.exe', cut_type = 1):
 	'''
 	Function that cuts demos. Offset variables are used to start cut x seconds before and x seconds after the spree
 	'''
-
+	output_demos = []
 	for row in range(len(df_spree)):
 		spree = df_spree.iloc[row]
 		exe_path = os.path.join(root_path, exe_name)
@@ -476,10 +479,13 @@ def cut_demos(root_path, demos_dct, df_spree, demo_type = 'kill', offset_start =
 		start_time = spree.start - (offset_start * 1000)
 		end_time = spree.end + (offset_end * 1000)
 
-		parameters = cutter_exe_cmd(root_path, match_folder, demo_name, spree, start_time, end_time, demo_type = demo_type, transform_to_dm_60 = transform_to_dm_60,
+		parameters, output_path = cutter_exe_cmd(root_path, match_folder, demo_name, spree, start_time, end_time, demo_type = demo_type, transform_to_dm_60 = transform_to_dm_60,
 									demo_folder_name = demo_folder_name, output_folder = output_folder, cut_type = cut_type)
 
 		os.system(exe_path + ' ' + parameters)
+		output_demos.append(output_path)
+	return output_demos
+
 
 
 ###############
@@ -618,6 +624,40 @@ def recordings_to_avi(vdub_folder, screenshots_folder, output_folder, vdub_exe, 
 
 	print('all done!')
 
+def recording_to_avi(vdub_folder, screenshots_folder, output_folder, vdub_exe, vdub_configfile, demo_name, remove_screenshots = True):
+	vdub_path = os.path.join(vdub_folder, vdub_exe)
+	vdubconfig_path = os.path.join(vdub_folder, vdub_configfile)
+	cmdline = vdub_path + ' /s ' + vdubconfig_path
+	rec = os.listdir(screenshots_folder)[0]
+	tgafolder = os.path.join(screenshots_folder, rec)
+	tgastartname = os.listdir(os.path.join(screenshots_folder, rec, tgafolder))[3]
+	vdubinputloc = os.path.join(screenshots_folder, rec, tgafolder, tgastartname)
+	outputfilename = demo_name + '.avi'
+	vduboutputloc = os.path.join(output_folder, outputfilename)
+	vdubinputline = 'VirtualDub.Open("' + vdubinputloc + '",0,0);\n'
+	vduboutputline = 'VirtualDub.SaveAVI("' + vduboutputloc + '");\n'
+	vdubinputline = vdubinputline.replace('\\', '\\\\')
+	vduboutputline = vduboutputline.replace('\\', '\\\\')
+
+
+	#replace lines in cfg file for input and output
+	with open(vdubconfig_path) as f:
+		lines = f.readlines()
+
+	lines[0] = vdubinputline
+	lines[-2] = vduboutputline
+
+	with open(vdubconfig_path, "w") as f:
+		f.writelines(lines)
+
+	#make avi
+	print('rendering ' + rec)
+	os.system(cmdline)
+
+	if remove_screenshots:
+		shutil.rmtree(os.path.join(screenshots_folder, rec))
+
+	return os.path.join(output_folder, outputfilename)
 
 
 def hh_mm_ss2seconds(x):
@@ -627,7 +667,7 @@ def hh_mm_ss2seconds(x):
 	if x in ('Warmup', 'Countdown', 'Intermission', ''):
 		s = -1
 	else:
-		s = reduce(lambda acc, x: acc*60 + x, map(int, x.split(':')))
+		s = functools.reduce(lambda acc, x: acc*60 + x, map(int, x.split(':')))
 
 	return s
 
@@ -709,7 +749,8 @@ def get_docruns(chatmessages_df, min_docrun_length = None, max_timeleft = None, 
 		match_name = df_demo.matchName.unique()
 		counter += 1
 
-		arr = df_demo.as_matrix(columns = ['DocsEvents', 'TimelimitHit', 'dwTime', 'SecondsLeftInRound'])
+		arr = df_demo[['DocsEvents', 'TimelimitHit', 'dwTime', 'SecondsLeftInRound']].to_numpy()
+
 		taken_docs_bool = False
 		docs_lost_times = 0
 
@@ -877,8 +918,7 @@ def get_wtvmoments(chatmessages_df, z = 5, window = 10, verbose=True):
 	return df_wtv
 
 def get_headshot_sprees(bulletevent_df, demo_df, maxtime_secs = 3, minspree = 3, pov_sprees_only = False, verbose = True):
-	#import the weapons_enum
-	from weapons_enum import weapons_enum
+
 
 	#empty lists that we will populate and use to make final df_spree
 	pd_md5 = []
@@ -912,7 +952,7 @@ def get_headshot_sprees(bulletevent_df, demo_df, maxtime_secs = 3, minspree = 3,
 			df_cut = df_demo.loc[bulletevent_df['bAttacker'] == player]
 			player_name = df_cut.szCleanName.unique()
 			df_cut = df_cut.sort_values('dwTime')
-			arr = df_cut.as_matrix(columns = ['bAttacker', 'bTarget', 'bRegion', 'dwTime'])
+			arr = df_cut[['bAttacker', 'bTarget', 'bRegion', 'dwTime']].to_numpy()
 
 			timerestriction = maxtime_secs * 1000 #put it in seconds for rtcw time
 			spreecounter = 0

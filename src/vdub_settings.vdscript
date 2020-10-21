@@ -1,4 +1,4 @@
-VirtualDub.Open("C:\\Users\\Jelle\\Documents\\RTCW\\1.41bclean\\wolfcam-rtcw\\screenshots\\220353-lc-papa-mp_ice_Lc-papa_7-7-7-6432700.dm_60\\20180213234437\\0000001822.tga",0,0);
+VirtualDub.Open("F:\\Rtcw\\\\osp\\screenshots\\220529-haaizor-te_frostbite_Haaizor_17-17-17-283055450.dm_60\\20201024182849\\0000000003.tga",0,0);
 VirtualDub.audio.SetSource(0);
 VirtualDub.audio.SetMode(0);
 VirtualDub.audio.SetInterleave(1,500,1,0,0);
@@ -18,5 +18,5 @@ VirtualDub.video.SetIVTC(0, 0, 0, 0);
 VirtualDub.video.SetCompression();
 VirtualDub.video.filters.Clear();
 VirtualDub.audio.filters.Clear();
-VirtualDub.SaveAVI("C:\\Users\\Jelle\\Documents\\movie\\captures\\220353-lc-papa-mp_ice_Lc-papa_7-7-7-6432700.avi");
+VirtualDub.SaveAVI("F:\\captures\\220529-haaizor-te_frostbite_Haaizor_17-17-17-283055450.dm_60.avi");
 VirtualDub.Close();
