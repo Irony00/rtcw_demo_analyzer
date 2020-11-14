@@ -1,4 +1,4 @@
-VirtualDub.Open("F:\\Rtcw\\\\osp\\screenshots\\220529-haaizor-te_frostbite_Haaizor_17-17-17-283055450.dm_60\\20201024182849\\0000000003.tga",0,0);
+VirtualDub.Open("F:\\Rtcw\\\\wolfcam-rtcw\\screenshots\\212750-uUhaaizor#poepbroek-adlernest_b3_Uu_Haaizor_#Poepbroek_17-17-17-17-17-17-21292550.dm_60\\20201114155831\\0000000003.tga",0,0);
 VirtualDub.audio.SetSource(0);
 VirtualDub.audio.SetMode(0);
 VirtualDub.audio.SetInterleave(1,500,1,0,0);
@@ -18,5 +18,5 @@ VirtualDub.video.SetIVTC(0, 0, 0, 0);
 VirtualDub.video.SetCompression();
 VirtualDub.video.filters.Clear();
 VirtualDub.audio.filters.Clear();
-VirtualDub.SaveAVI("F:\\captures\\220529-haaizor-te_frostbite_Haaizor_17-17-17-283055450.dm_60.avi");
+VirtualDub.SaveAVI("F:\\captures\\212750-uUhaaizor#poepbroek-adlernest_b3_Uu_Haaizor_#Poepbroek_17-17-17-17-17-17-21292550.dm_60.avi");
 VirtualDub.Close();
