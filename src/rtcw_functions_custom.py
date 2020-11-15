@@ -138,7 +138,7 @@ def indexer_exe_cmd(demo_path, parameters_dct):
 
 	return s
 
-def fill_db(root_path, parameters_dct, demos_dct, demo_folder_name = 'demos', exe_name = 'Anders.Gaming.LibTech3.exe', verbose = True):
+def fill_db(root_path, parameters_dct, demos_dct, demo_folder_name = 'demos', exe_name = 'Anders.Gaming.LibTech3release.exe', verbose = True):
 	'''
 	fill a sqlite database with statistics of all demos
 
