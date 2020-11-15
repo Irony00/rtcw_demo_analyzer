@@ -486,8 +486,6 @@ def cut_demos(root_path, demos_dct, df_spree, demo_type = 'kill', offset_start =
 		output_demos.append(output_path)
 	return output_demos
 
-
-
 ###############
 # MISCELLANEOUS
 ###############

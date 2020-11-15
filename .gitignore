@@ -16,9 +16,6 @@ output_spree_demos/
 demos2/
 
 *.dm_60
-
-*.txt
-
 *.pk3
 
 *.bat
